@@ -1,0 +1,57 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- ~ COORDINATES ~ -->
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<groupId>fr.clunven</groupId>
+	<artifactId>moviereader</artifactId>
+	<name>moviereader</name>
+	<version>1.0-SNAPSHOT</version>
+
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- ~ PROPERTIES ~ -->
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<properties>
+		<encoding>UTF-8</encoding>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<jna.version>3.3.0</jna.version>
+	</properties>
+
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- ~ DEPENDENCIES ~ -->
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<dependencies>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+			<version>4.12</version>
+		</dependency>
+		
+	    <dependency>
+	        <groupId>net.java.dev.jna</groupId>
+	        <artifactId>jna</artifactId>
+	        <version>${jna.version}</version>
+	    </dependency>
+	    <dependency>
+	        <groupId>net.java.dev.jna</groupId>
+	        <artifactId>jna</artifactId>
+	        <version>${jna.version}</version>
+	        <classifier>platform</classifier>
+	    </dependency>
+	    
+		<dependency>
+    		<groupId>fr.clunven.movie</groupId>
+    		<artifactId>mediaInfo</artifactId>
+   		 	<version>1.0</version>
+   		 	<scope>runtime</scope>
+   			<type>dll</type>
+		</dependency>
+
+	</dependencies>
+
+</project>
