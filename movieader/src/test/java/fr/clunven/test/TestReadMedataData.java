@@ -2,10 +2,12 @@ package fr.clunven.test;
 
 import org.junit.Test;
 
+import fr.clunven.mediainfo.domain.Audio;
+import fr.clunven.mediainfo.domain.General;
 import fr.clunven.mediainfo.domain.MovieMetadata;
+import fr.clunven.mediainfo.domain.Video;
 
 public class TestReadMedataData {
-    
    
     @Test
     public void testReadMeta() {
@@ -26,6 +28,17 @@ public class TestReadMedataData {
         
         System.out.println("==================== MKV ======================================");
         System.out.println(new MovieMetadata("./src/test/resources/small.mkv").toString());
+        
+        
+        MovieMetadata movieMedataData = new MovieMetadata("./src/test/resources/small.mkv");
+        movieMedataData.get(General.FORMAT);
+        movieMedataData.get(Video.DURATION_STRING);
+        movieMedataData.get(Video.WIDTH_STRING);
+        movieMedataData.get(Video.HEIGHT_STRING);
+        movieMedataData.get(Video.BITRATE_STRING);
+        movieMedataData.get(Audio.COMPRESSION_RATIO);
+        //...
+        
     }
 
 }

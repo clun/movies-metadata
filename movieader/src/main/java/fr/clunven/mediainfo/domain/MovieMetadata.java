@@ -115,7 +115,7 @@ public class MovieMetadata {
         return Optional.ofNullable(getAudioKeys().get(key));
     }
     public Optional<String> get(Video key) {
-        return Optional.ofNullable(getAudioKeys().get(key));
+        return Optional.ofNullable(getVideoKeys().get(key));
     }
 
     /**
