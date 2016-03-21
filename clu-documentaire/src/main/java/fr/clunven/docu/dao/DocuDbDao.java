@@ -40,87 +40,40 @@ public class DocuDbDao {
     /** Cache of list of subgenres. */
     private Map < Integer, List <String> > childGenres = new HashMap<>();
       
-    /**
-     * Association between genre and label.
-     *
-     * @param genreNom
-     *      label
-     * @return
-     *      identifiant du genre
-     */
-    public int getGenreId(String genreNom) {
-        try {
-            return getJdbcTemplate().queryForObject("SELECT ID FROM ref_genre WHERE NOM LIKE ?", Integer.class, genreNom.trim());
-         } catch(EmptyResultDataAccessException re) {                
-                throw new IllegalArgumentException("Cannot find GENRE : " + genreNom, re);
-         }
-    }
     
-    /**
-     * Check that serie already exist.
-     *
-     * @param name
-     *      identifier
-     * @return
-     *      if the serie exist
-     */
     public boolean isSerieExist(String name) {
-        int i = getJdbcTemplate().queryForObject(
+        return getJdbcTemplate().queryForObject(
                 "SELECT COUNT(*) FROM t_serie WHERE UPPER(TITRE) LIKE ?", 
-                Integer.class, name.toUpperCase().trim());
-        return i > 0;
+                Integer.class, name.toUpperCase().trim()) > 0;
     }
-    
-    /**
-     * Check existence of documentaire.
-     *
-     * @param titre
-     *      titre of documentaire
-     * @return
-     *      if the documentaire exist
-     */
+   
     public boolean isDocumentaireExist(String titre) {
         return getJdbcTemplate().queryForObject(
                 "SELECT COUNT(*) FROM t_documentaire WHERE UPPER(TITRE) LIKE ?", 
                 Integer.class, titre.toUpperCase().trim()) > 0;
     }
     
-    /**
-     * Check that episode is not existing with different name.
-     *
-     * @param titre
-     *      target episode titre
-     * @param nb
-     *      episode number
-     * @param saison
-     *      saison number
-     * @param serie
-     *      identifiant de la serie
-     * @return
-     */
     public boolean isEpisodeExist(String titre, int serie, int saison, int nb) {
         return getJdbcTemplate().queryForObject(
                 "SELECT COUNT(*) FROM t_episode " + 
                 "WHERE (SERIE = ?) and (SAISON = ?) AND (EPISODE = ?) AND (UPPER(TITRE) LIKE ?)", 
                 Integer.class,serie, saison, nb, titre.toUpperCase().trim()) > 0;
     }
-    
-    /**
-     * Get serieID byt its ID.
-     *
-     * @param serieName
-     *      check serie existence
-     * @return
-     *      
-     */
-    public int getSerieId(String serieName) {
-        
+   
+    public int searchGenreIdByGenreName(String genreNom) {
         try {
-            return getJdbcTemplate().
-                    queryForObject(  "SELECT ID FROM t_serie "
-                                   + "WHERE UPPER(TITRE) LIKE ?", Integer.class, serieName.toUpperCase().trim());
+            return getJdbcTemplate().queryForObject("SELECT ID FROM ref_genre WHERE NOM LIKE ?", 
+                            Integer.class, genreNom.trim());
+        } catch (EmptyResultDataAccessException re) {
+            throw new IllegalArgumentException("Cannot find GENRE : " + genreNom, re);
+        }
+    }
+    
+    public int getSerieIdBySerieName(String serieName) {
+        try {
+            return getJdbcTemplate().queryForObject("SELECT ID FROM t_serie WHERE UPPER(TITRE) LIKE ?", 
+                            Integer.class, serieName.toUpperCase().trim());
         } catch(EmptyResultDataAccessException re) {
-            logger.error("Cannot find" + serieName);
             throw new IllegalArgumentException("Cannot find SERIE : " + serieName , re);
         }
     }

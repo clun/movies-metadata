@@ -21,7 +21,7 @@ import fr.clunven.mediainfo.domain.MovieMetadata;
 import fr.clunven.mediainfo.domain.Video;
 
 /**
- * Documentaires services.s
+ * Documentaires services.
  * 
  * @author Cedrick Lunven (@clunven)</a>
  */
@@ -53,11 +53,12 @@ public class DocuServices {
                 collect(Collectors.toCollection(TreeSet::new));
         
         for(String genre : docudb.getListOfGenres()) {
-            //logger.info(" + GENRE : " + genre);
+            //
             if (!setOfFolderNames.contains(genre)) {
                 logger.warn("'" + rootFolder.getAbsolutePath() + File.separator + genre + "' not found on fileSystem");
                 result.getNotOnFileSystem().add(rootFolder.getAbsolutePath() + File.separator + genre);
                 if (createMissing) {
+                   logger.info(" + Creation repertoire : " + genre);
                    new File(rootFolder.getAbsolutePath() + File.separator + genre).mkdirs();
                 }
             }
@@ -68,6 +69,8 @@ public class DocuServices {
             if (!docudb.getListOfGenres().contains(titre)) {
                 result.getNotInDatabase().add(titre);
                 logger.warn("'" + titre + "' non trouvé dans la base de donnée");
+            } else {
+                logger.info("[OK] " + titre);
             }
         }
         
@@ -84,7 +87,7 @@ public class DocuServices {
      * @return
      *      si le system est valid
      */
-    public SyncFolderResult syncFileSystemAndDBSub(File dir, int parentGenre) {
+    public SyncFolderResult syncFileSystemAndDBSub(File dir) {
         SyncFolderResult resultat = new SyncFolderResult();
       
         Set< String > setOfFolderNames = Arrays.stream(
@@ -95,17 +98,21 @@ public class DocuServices {
                 // collect as set
                 collect(Collectors.toCollection(TreeSet::new));
                 
-        //logger.info("FS=>DB : Dossiers:" + dir.getAbsolutePath() + " avec " + setOfFolderNames.size() + " repertoires: " + setOfFolderNames);
-        int genreAssocie = docudb.getGenreId(dir.getName());
-        List < String > children = docudb.getListOfChildGenre(genreAssocie);
+        //logger.info("FS=>DB : Dossiers:" + dir.getAbsolutePath() + 
+        //        " avec " + setOfFolderNames.size() + " repertoires: " + setOfFolderNames);
+       
+        // Recherche du genre depuis le nom du répertoire (eg: Astronomie)
+        int genreAssocie = docudb.searchGenreIdByGenreName(dir.getName());
         //logger.info("FS=>DB : Un genre associe a ete trouvé dans la base :" + genreAssocie);
         
-        // if not exist in database - error
+        // Recherche des genres "enfants" (-- BigBang)
+        logger.info(dir.getName());
+        List < String > children = docudb.getListOfChildGenre(genreAssocie);
         for(String subfolder : setOfFolderNames) {
             if (!children.contains(subfolder)) {
                 resultat.getNotInDatabase().add(subfolder);
             } else {
-                //logger.info("+ Repertoire '" + subfolder + "' a retrouvé son équivalent dans la base");
+                logger.info("[FS->DB][OK] " + subfolder);
             }
         }
         
@@ -113,13 +120,14 @@ public class DocuServices {
         //logger.info("DB=>FS : Genre:" + genreAssocie + " avec " + children.size() + " enfants: " + children);
         for(String child : children) {
             if (!setOfFolderNames.contains(child)) {
-                //logger.warn("Expected '" + child + "' not found on fileSystem within " + dir.getName());
+                logger.warn("Expected '" + child + "' not found on fileSystem within " + dir.getName());
                 new File(dir.getAbsolutePath() + File.separator + "-- " + child).mkdirs();
                 resultat.getNotOnFileSystem().add(dir.getAbsolutePath() + File.separator + "-- " + child);
             } else {
-                //logger.info("+ Genre '"+ child + "' a retrouvé le répertoire " + dir.getAbsolutePath() + File.separator + "-- " + child);
+                logger.info("[DB->FS][OK] " + child);
             }
         }
+        
         //logger.info(dir.getAbsolutePath() + ":" + resultat.isValid());
         if (!resultat.isValid()) {
             logger.error("Répertoire " + dir.getAbsolutePath() + " invalide : \r\n" + resultat.toString());
@@ -145,7 +153,7 @@ public class DocuServices {
            SmartSerieName sfmSerie = new SmartSerieName(serie.getName());
            if (!docudb.isSerieExist(sfmSerie.getTitre())) {
                logger.info("Creation de la serie : '" + sfmSerie.getTitre() + "' (" + serie.getAbsolutePath() + ")");
-               int genre = docudb.getGenreId(rootFolder.getName().replaceAll("-- ", ""));
+               int genre = docudb.searchGenreIdByGenreName(rootFolder.getName().replaceAll("-- ", ""));
                docudb.createSerie(sfmSerie.getTitre(), genre, sfmSerie.getAnneeStart(), sfmSerie.getAnneeEnd(), sfmSerie.isVo());
            }
         }
@@ -194,7 +202,7 @@ public class DocuServices {
         }
         
         // Collecte de l'identifiant depuis le nom
-        int serieID = docudb.getSerieId(serieName);
+        int serieID = docudb.getSerieIdBySerieName(serieName);
         
         // Recherche le pattern NN - Element
         File[] episodes = folder.listFiles(file -> new SmartFileName(file.getName()).startByNumber());
@@ -295,7 +303,7 @@ public class DocuServices {
         docu.setDuree(duree);
         docu.setTaille(fileSize);
         try {
-            docu.setGenre(docudb.getGenreId(repertoireDocu.getParentFile().getName().replaceAll("-- ", "")));
+            docu.setGenre(docudb.searchGenreIdByGenreName(repertoireDocu.getParentFile().getName().replaceAll("-- ", "")));
             docudb.createDocumentaire(docu);
         } catch(IllegalArgumentException e) {
             logger.error(" +++ ERROR DOCUMENTAIRE " + repertoireDocu.getName(), e);
