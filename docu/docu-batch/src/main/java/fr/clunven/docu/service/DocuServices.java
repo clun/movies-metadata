@@ -2,36 +2,39 @@ package fr.clunven.docu.service;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import fr.clunven.docu.dao.DocuDbDao;
-import fr.clunven.docu.domain.Documentaire;
-import fr.clunven.docu.domain.Episode;
-import fr.clunven.docu.domain.SmartFileName;
-import fr.clunven.docu.domain.SmartSerieName;
+import fr.clunven.docu.dao.db.DocumentaryDbDao;
+import fr.clunven.docu.dao.db.EpisodeDbDao;
+import fr.clunven.docu.dao.db.SerieDbDao;
 import fr.clunven.docu.domain.SyncFolderResult;
-import fr.clunven.docu.media.General;
-import fr.clunven.docu.media.MovieMetadata;
-import fr.clunven.docu.media.Video;
 
 /**
  * Documentaires services.
  * 
  * @author Cedrick Lunven (@clunven)</a>
  */
+@Service("docu.service.batch")
 public class DocuServices {
 
     /** logger for this class. */
     private Logger logger = LoggerFactory.getLogger(DocuServices.class);
    
-    /** Injecting DAO. */
-    private DocuDbDao docudb;
+    @Autowired
+    private DocumentaryDbDao docuDbDao;
+    
+    @Autowired
+    private EpisodeDbDao episodeDbDao;
+    
+    @Autowired
+    private SerieDbDao serieDbDao;
     
     /**
      * List file in DB, find not existing in FS and create related.
@@ -46,7 +49,7 @@ public class DocuServices {
     public SyncFolderResult syncFileSystemAndDB(File rootFolder , boolean createMissing) {
         SyncFolderResult result = new SyncFolderResult();
         
-        // List filesystem directories
+        /* List filesystem directories
         Set< String > setOfFolderNames = Arrays.stream(rootFolder.
                 listFiles(File::isDirectory)).//
                 map(File::getName).//
@@ -72,7 +75,7 @@ public class DocuServices {
             } else {
                 logger.info("[OK] " + titre);
             }
-        }
+        }*/
         
         return result;
     }
@@ -98,7 +101,7 @@ public class DocuServices {
                 // collect as set
                 collect(Collectors.toCollection(TreeSet::new));
                 
-        //logger.info("FS=>DB : Dossiers:" + dir.getAbsolutePath() + 
+        /*logger.info("FS=>DB : Dossiers:" + dir.getAbsolutePath() + 
         //        " avec " + setOfFolderNames.size() + " repertoires: " + setOfFolderNames);
        
         // Recherche du genre depuis le nom du répertoire (eg: Astronomie)
@@ -132,7 +135,7 @@ public class DocuServices {
         if (!resultat.isValid()) {
             logger.error("Répertoire " + dir.getAbsolutePath() + " invalide : \r\n" + resultat.toString());
             System.exit(-2);
-        }
+        }*/
         return resultat;
     }
     
@@ -144,7 +147,7 @@ public class DocuServices {
      */
     public void createSeries(File rootFolder) {
         
-        // Liste des SERIES
+        /* Liste des SERIES
         Set< File > series = Arrays.stream(
                 rootFolder.listFiles(file->file.isDirectory() && file.getName().startsWith("[SERIE] - "))).
                 collect(Collectors.toCollection(TreeSet::new));
@@ -156,7 +159,7 @@ public class DocuServices {
                int genre = docudb.searchGenreIdByGenreName(rootFolder.getName().replaceAll("-- ", ""));
                docudb.createSerie(sfmSerie.getTitre(), genre, sfmSerie.getAnneeStart(), sfmSerie.getAnneeEnd(), sfmSerie.isVo());
            }
-        }
+        }*/
     }
     
     /**
@@ -195,13 +198,13 @@ public class DocuServices {
     private void analyseSerie(File folder) {
         logger.debug("Processing Serie: " + folder.getName());
         
-        // Pour le nom de la serie on enleve le prefixe et les eventuelles dates
+        /*Pour le nom de la serie on enleve le prefixe et les eventuelles dates
         String serieName = folder.getName().replaceAll("\\[SERIE\\] - ", "").replaceAll("\\(vo\\)", "").trim();
         if (serieName.lastIndexOf("(") != -1) {
             serieName = serieName.substring(0,  serieName.lastIndexOf("(")).trim();
         }
         
-        // Collecte de l'identifiant depuis le nom
+        / Collecte de l'identifiant depuis le nom
         int serieID = docudb.getSerieIdBySerieName(serieName);
         
         // Recherche le pattern NN - Element
@@ -252,7 +255,7 @@ public class DocuServices {
           
             // Si pas d'annee trouve on met 1900 comme valeur par defaut
             processSaison(folder, serieID, nbSaison, isNumeric(annee) ? Integer.parseInt(annee) : 1900);
-        }
+        }*/
     }
     
     /**
@@ -266,7 +269,7 @@ public class DocuServices {
     private void processDocumentaire(File repertoireDocu) {
         logger.debug("Processing Documentaire " + repertoireDocu.getName());
         
-        // Lecture du fichier VIDEO pour initialiser un episode
+        /* Lecture du fichier VIDEO pour initialiser un episode
         Documentaire docu = new Documentaire();
               
         // Information complémentaires sur le fichier
@@ -307,7 +310,7 @@ public class DocuServices {
             docudb.createDocumentaire(docu);
         } catch(IllegalArgumentException e) {
             logger.error(" +++ ERROR DOCUMENTAIRE " + repertoireDocu.getName(), e);
-        }
+        }*/
     }
     
     /**
@@ -323,7 +326,7 @@ public class DocuServices {
      */
     private void processSaison(File folderSaison, int serie, int nbSaison, int annee) {
         
-        // Recherche le pattern NN - Element
+        /* Recherche le pattern NN - Element
         File[] episodes = folderSaison.listFiles(file -> new SmartFileName(file.getName()).startByNumber());
         
         // On s'attend forcément a avoir des episodes ici alors erreur au besoin
@@ -404,7 +407,7 @@ public class DocuServices {
                 // Creation si non existant, update sinon
                 docudb.createEpisode(ep);
             }
-        }
+        }*/
     }
    
     /**
@@ -419,24 +422,5 @@ public class DocuServices {
             if (!Character.isDigit(c)) return false;
         }
         return true;
-    }
-    
-    /**
-     * Getter accessor for attribute 'docudb'.
-     *
-     * @return
-     *       current value of 'docudb'
-     */
-    public DocuDbDao getDocudb() {
-        return docudb;
-    }
-
-    /**
-     * Setter accessor for attribute 'docudb'.
-     * @param docudb
-     * 		new value for 'docudb '
-     */
-    public void setDocudb(DocuDbDao docudb) {
-        this.docudb = docudb;
     }
 }

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+	version="3.0">
+
+ 	<!-- Display Name in application server -->
+	<display-name>WebApp Docus</display-name>
+
+	<!-- Resources -->
+	<context-param>
+        <param-name>javax.servlet.jsp.jstl.fmt.localizationContext</param-name>
+        <param-value>application-resources</param-value>
+    </context-param>
+    <context-param>
+        <param-name>javax.servlet.jsp.jstl.fmt.fallbackLocale</param-name>
+        <param-value>en</param-value>
+    </context-param>
+    
+    <!-- SpringBeans -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>
+		 WEB-INF/applicationContext-mvc.xml
+		 WEB-INF/dispatcher-servlet.xml		 
+		</param-value>
+	</context-param>
+
+	<!-- Spring Context -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+	
+	 <!-- SiteMesh -->
+    <filter>
+        <filter-name>sitemesh</filter-name>
+        <filter-class>com.opensymphony.module.sitemesh.filter.PageFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>sitemesh</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>FORWARD</dispatcher>
+    </filter-mapping> 
+    
+    <filter>
+        <filter-name>securityFilter</filter-name>
+        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+        <init-param>
+            <param-name>targetBeanName</param-name>
+            <param-value>springSecurityFilterChain</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>securityFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>FORWARD</dispatcher>
+        <dispatcher>INCLUDE</dispatcher>
+    </filter-mapping>
+    
+	<!-- Spring MVC -->
+	<servlet>
+		<servlet-name>dispatcher</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>dispatcher</servlet-name>
+		<url-pattern>*.htm</url-pattern>
+	</servlet-mapping>
+	
+	<servlet>
+		<servlet-name>jsp</servlet-name>
+		<servlet-class>org.apache.jasper.servlet.JspServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>jsp</servlet-name>
+		<url-pattern>/WEB-INF/pages/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>jsp</servlet-name>
+		<url-pattern>/jsp-layout/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>jsp</servlet-name>
+		<url-pattern>/jsp-tiles/*</url-pattern>
+	</servlet-mapping>
+
+	<!-- Ignore resources -->
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.css</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.js</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.jpg</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.png</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.eot</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.svg</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.woff</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.svgz</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.ttf</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.otf</url-pattern>
+	</servlet-mapping>
+    
+	<!-- Welcome file -->
+	<welcome-file-list>
+		<welcome-file>/home.htm</welcome-file>
+	</welcome-file-list>
+	
+	<!-- Define error pages -->
+    <error-page>
+        <error-code>403</error-code>
+        <location>/403.jsp</location>
+    </error-page>
+    
+    <error-page>
+        <error-code>404</error-code>
+        <location>/404.jsp</location>
+    </error-page>
+        
+    <error-page>
+        <error-code>500</error-code>
+        <location>/error.jsp</location>
+    </error-page>
+    
+	<!-- Enable JSP Config 
+	<jsp-config>
+        <jsp-property-group>
+            <url-pattern>*.jsp</url-pattern>
+            <trim-directive-whitespaces>true</trim-directive-whitespaces>
+        </jsp-property-group>
+        <taglib>
+            <taglib-uri>http://www.clunven.fr/taglib/docus</taglib-uri>
+            <taglib-location>/WEB-INF/tld/docus.tld</taglib-location>
+        </taglib>
+    </jsp-config>
+    -->
+    
+    <!-- Track Session through cookie -->
+	<session-config>
+        <session-timeout>15</session-timeout>
+        <cookie-config>
+            <http-only>true</http-only>
+            <!--<secure>true</secure>-->
+        </cookie-config>
+        <tracking-mode>COOKIE</tracking-mode>
+    </session-config>
+
+</web-app>

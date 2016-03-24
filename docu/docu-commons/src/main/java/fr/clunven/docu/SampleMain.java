@@ -1,9 +1,8 @@
 package fr.clunven.docu;
 
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import fr.clunven.docu.dao.db.DocuDbDao;
+import fr.clunven.docu.dao.db.ReferentialDbDao;
 
 
 public class SampleMain {
@@ -13,8 +12,8 @@ public class SampleMain {
         ctx.register(CommonsConfig.class);
         ctx.refresh();
         
-        DocuDbDao dbDao = (DocuDbDao) ctx.getBean(DocuDbDao.class);
-        System.out.println(dbDao.getListOfGenres());
+        ReferentialDbDao dbDao = (ReferentialDbDao) ctx.getBean(ReferentialDbDao.class);
+        System.out.println(dbDao.getGenres());
         
     }
 

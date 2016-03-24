@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration>
+<decorators defaultdir="/jsp-layout" >
+
+    <excludes>
+        <pattern>/img/*</pattern>
+        <pattern>/css/*</pattern>
+        <pattern>/js/*</pattern>
+        <pattern>/fonts/*</pattern>
+    </excludes> 
+    
+    <!-- Home -->
+    <decorator name="default" page="layout-default.jsp">
+        <pattern>/*</pattern>
+        <pattern>/40*.jsp</pattern>
+        <pattern>/error.jsp</pattern>                
+    </decorator>
+    
+    <!-- Home -->
+    <decorator name="start" page="layout-public.jsp">
+        <pattern>/start.htm</pattern>
+        <pattern>/index.jsp</pattern>
+    </decorator>
+    
+    <!--Login -->
+     <decorator name="login" page="layout-login.jsp">
+        <pattern>/login.htm</pattern>
+     </decorator>
+    
+</decorators>
