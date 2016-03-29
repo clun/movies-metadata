@@ -51,7 +51,8 @@
    		 	<scope>runtime</scope>
    			<type>dll</type>
 		</dependency>
-
 	</dependencies>
-
+        <build>
+                <defaultGoal>test</defaultGoal>
+        </build>
 </project>
