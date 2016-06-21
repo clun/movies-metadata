@@ -1,6 +1,5 @@
 package fr.clunven.docu.web.domain;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;

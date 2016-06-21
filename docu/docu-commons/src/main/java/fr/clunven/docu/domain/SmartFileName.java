@@ -58,25 +58,20 @@ public class SmartFileName {
         if (startByNumber()) {
             number = Integer.parseInt(fileName.substring(0,2));
             titre = filename.substring(4);
-        }
-        
+        }        
         // Remove extension
         if (getExtension() != null) {
             titre = titre.substring(0, titre.lastIndexOf("."));
-        }
-        
+        }        
         // Vo
         if (isVo()) {
             titre = titre.replaceAll("\\(vo\\)", "");
-        }
-        
+        }        
         // Annee
         if (getAnnee() != -1) {
             titre = titre.replaceAll("\\(" + annee + "\\)", "");
-        }
-        
+        }        
         titre = titre.replaceAll("-- ", "").trim();
-        
     }
 
     /**
@@ -159,7 +154,8 @@ public class SmartFileName {
      *      if the filename start by a number
      */
     public boolean startByNumber() {
-        return Character.isDigit(filename.charAt(0)) && Character.isDigit(filename.charAt(1));
+        return Character.isDigit(filename.charAt(0)) && 
+               Character.isDigit(filename.charAt(1));
     }
 
     /**

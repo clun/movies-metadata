@@ -4,6 +4,9 @@ import java.io.Serializable;
 
 public class GenreDto implements Serializable, Comparable < GenreDto > {
 
+    /** Serial */ 
+    private static final long serialVersionUID = 6995947266771564599L;
+
     private String name;
     
     private int id;

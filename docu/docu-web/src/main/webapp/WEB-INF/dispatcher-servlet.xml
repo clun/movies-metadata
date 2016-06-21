@@ -6,13 +6,12 @@
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
  	
- 	<!-- Scan Controller package -->
  	<context:component-scan base-package="fr.clunven.docu"/>
  	
-    <!-- Configures the @Controller programming model -->
     <mvc:annotation-driven />
     
     <!-- Force LOGIN -->
+	<mvc:view-controller path="/" 					  view-name="documentaire"/>
     <mvc:view-controller path="/login.htm" 			  view-name="login"/>
     <mvc:view-controller path="/j_security_check.htm" view-name="login"/>
     
@@ -27,7 +26,7 @@
 	
 	<mvc:interceptors>  
         <bean class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor">
-              <property name="paramName" value="lang"></property>
+			<property name="paramName" value="lang" />
         </bean>
 	</mvc:interceptors>
 	

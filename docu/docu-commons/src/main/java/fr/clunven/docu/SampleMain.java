@@ -14,7 +14,7 @@ public class SampleMain {
         
         ReferentialDbDao dbDao = (ReferentialDbDao) ctx.getBean(ReferentialDbDao.class);
         System.out.println(dbDao.getGenres());
-        
+        ctx.close();
     }
 
 }

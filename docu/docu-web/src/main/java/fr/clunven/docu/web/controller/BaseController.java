@@ -1,14 +1,11 @@
 package fr.clunven.docu.web.controller;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -30,9 +27,12 @@ import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
 import org.springframework.web.servlet.ModelAndView;
 
 import fr.clunven.docu.dao.db.DocumentaryDbDao;
+import fr.clunven.docu.dao.db.ReferentialDbDao;
+import fr.clunven.docu.dao.db.dto.FormatDto;
+import fr.clunven.docu.dao.db.dto.LangueDto;
+import fr.clunven.docu.dao.db.dto.PaysDto;
 import fr.clunven.docu.service.MenuService;
 import fr.clunven.docu.web.domain.DocuConstants;
-import fr.clunven.docu.web.domain.DocuManifest;
 import fr.clunven.docu.web.domain.DocuUser;
 
 /**
@@ -55,6 +55,9 @@ public class BaseController implements ServletContextAware, DocuConstants {
     protected DocumentaryDbDao documentaryDbDao;
     
     @Autowired
+    protected ReferentialDbDao referentialDbDao;
+    
+    @Autowired
     protected MenuService menuService;
     
     @Value("#{'${core.version:1.0}'}")
@@ -68,9 +71,6 @@ public class BaseController implements ServletContextAware, DocuConstants {
 
     /** Autowired through getter. */
     private MessageSourceAccessor messages;
-
-    /** target manifest. */
-    private DocuManifest manifest;
 
     /** Page sor the success view. */
     private String successView;
@@ -102,8 +102,19 @@ public class BaseController implements ServletContextAware, DocuConstants {
         flushMessages(request);
         ModelAndView mav = new ModelAndView(getSuccessView());
         mav.addObject(BEAN_USER, getUser());
-        mav.addObject(BEAN_MENU, menuService.getMenu());
-        mav.addObject("versionNumber", versionNumber);
+        
+        List < FormatDto > formats = new ArrayList<>(referentialDbDao.getFormats().values());
+        Collections.sort(formats);
+        mav.addObject(BEAN_REF_FORMAT, formats);
+        
+        List < LangueDto > langues = new ArrayList<>(referentialDbDao.getLangues().values());
+        Collections.sort(langues);
+        mav.addObject(BEAN_REF_LANGUE, langues);
+        
+        List < PaysDto > pays = new ArrayList<>(referentialDbDao.getPays().values());
+        Collections.sort(pays);
+        mav.addObject(BEAN_REF_PAYS, pays);
+        mav.addObject("versionNumber", "1.0");
         return mav;
     }
 

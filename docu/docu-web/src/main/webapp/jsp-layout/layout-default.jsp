@@ -22,6 +22,11 @@
       
      </div><!-- ./wrapper -->
   	
+  	 	
+  	<video autoplay loop id="bgvid">
+		<source src="<c:url value='img/background/video4.mp4'/>" type="video/mp4" />
+	</video>
+	
      <!-- Footer -->
      <%@ include file="/jsp-tiles/footer.jsp"%>
 

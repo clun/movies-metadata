@@ -1,9 +1,13 @@
 package fr.clunven.docu.service;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -13,20 +17,32 @@ import org.springframework.stereotype.Service;
 
 import fr.clunven.docu.dao.db.DocumentaryDbDao;
 import fr.clunven.docu.dao.db.EpisodeDbDao;
+import fr.clunven.docu.dao.db.ReferentialDbDao;
 import fr.clunven.docu.dao.db.SerieDbDao;
-import fr.clunven.docu.domain.SyncFolderResult;
+import fr.clunven.docu.dao.db.dto.GenreDto;
+import fr.clunven.docu.dao.db.dto.SerieDto;
+import fr.clunven.docu.domain.ComparaisonFsDb;
+import fr.clunven.docu.domain.Episode;
+import fr.clunven.docu.domain.SmartFileName;
+import fr.clunven.docu.domain.SmartSerieName;
+import fr.clunven.docu.media.General;
+import fr.clunven.docu.media.MovieMetadata;
+import fr.clunven.docu.media.Video;
 
 /**
  * Documentaires services.
  * 
  * @author Cedrick Lunven (@clunven)</a>
  */
-@Service("docu.service.batch")
+@Service("docu.batch.service")
 public class DocuServices {
 
     /** logger for this class. */
     private Logger logger = LoggerFactory.getLogger(DocuServices.class);
-   
+    
+    @Autowired
+    private ReferentialDbDao refDbDao;
+    
     @Autowired
     private DocumentaryDbDao docuDbDao;
     
@@ -37,6 +53,21 @@ public class DocuServices {
     private SerieDbDao serieDbDao;
     
     /**
+     * First control, the folder must exist.
+     *
+     * @param folderPath
+     *      input folder
+     * @throws FileNotFoundException
+     *      repertoire non trouvé
+     */
+    public void checkInputFolder(File rootFolder) throws FileNotFoundException {
+       if (!rootFolder.exists() || !rootFolder.isDirectory() || !rootFolder.canRead()) {
+            logger.error("Impossible de trouver '" + rootFolder.getPath() + "' vérifier le chemin SVP");
+            throw new FileNotFoundException("Le repertoire " + rootFolder.getPath() + " n'existe pas ou n'est pas lisible, vérifier le chemin SVP");
+        }
+    }
+  
+    /**
      * List file in DB, find not existing in FS and create related.
      *
      * @param folderPath
@@ -46,38 +77,11 @@ public class DocuServices {
      * @return
      *      anomalie number detected
      */
-    public SyncFolderResult syncFileSystemAndDB(File rootFolder , boolean createMissing) {
-        SyncFolderResult result = new SyncFolderResult();
-        
-        /* List filesystem directories
-        Set< String > setOfFolderNames = Arrays.stream(rootFolder.
-                listFiles(File::isDirectory)).//
-                map(File::getName).//
-                collect(Collectors.toCollection(TreeSet::new));
-        
-        for(String genre : docudb.getListOfGenres()) {
-            //
-            if (!setOfFolderNames.contains(genre)) {
-                logger.warn("'" + rootFolder.getAbsolutePath() + File.separator + genre + "' not found on fileSystem");
-                result.getNotOnFileSystem().add(rootFolder.getAbsolutePath() + File.separator + genre);
-                if (createMissing) {
-                   logger.info(" + Creation repertoire : " + genre);
-                   new File(rootFolder.getAbsolutePath() + File.separator + genre).mkdirs();
-                }
-            }
-        }
-        
-        for(String titre : setOfFolderNames) {
-            //logger.info(" + FOLDER : " + titre);
-            if (!docudb.getListOfGenres().contains(titre)) {
-                result.getNotInDatabase().add(titre);
-                logger.warn("'" + titre + "' non trouvé dans la base de donnée");
-            } else {
-                logger.info("[OK] " + titre);
-            }
-        }*/
-        
-        return result;
+    public ComparaisonFsDb checkGenres(File rootFolder) {
+        return compareFSandDb(
+                Arrays.stream(rootFolder.listFiles(File::isDirectory)).map(File::getName).
+                collect(Collectors.toCollection(TreeSet::new)), 
+                refDbDao.getSetOfTopLevelGenreName());
     }
    
     /**
@@ -90,97 +94,38 @@ public class DocuServices {
      * @return
      *      si le system est valid
      */
-    public SyncFolderResult syncFileSystemAndDBSub(File dir) {
-        SyncFolderResult resultat = new SyncFolderResult();
-      
-        Set< String > setOfFolderNames = Arrays.stream(
+    public ComparaisonFsDb checkSubGenres(File dir) {
+        return compareFSandDb(Arrays.stream(
                 // List folders starts by "--"
                 dir.listFiles(file->file.isDirectory() && file.getName().startsWith("--"))).
                 // remove the dash at start
                 map(file->file.getName().replaceAll("-- ", "")).//
                 // collect as set
-                collect(Collectors.toCollection(TreeSet::new));
-                
-        /*logger.info("FS=>DB : Dossiers:" + dir.getAbsolutePath() + 
-        //        " avec " + setOfFolderNames.size() + " repertoires: " + setOfFolderNames);
-       
-        // Recherche du genre depuis le nom du répertoire (eg: Astronomie)
-        int genreAssocie = docudb.searchGenreIdByGenreName(dir.getName());
-        //logger.info("FS=>DB : Un genre associe a ete trouvé dans la base :" + genreAssocie);
-        
-        // Recherche des genres "enfants" (-- BigBang)
-        logger.info(dir.getName());
-        List < String > children = docudb.getListOfChildGenre(genreAssocie);
-        for(String subfolder : setOfFolderNames) {
-            if (!children.contains(subfolder)) {
-                resultat.getNotInDatabase().add(subfolder);
-            } else {
-                logger.info("[FS->DB][OK] " + subfolder);
-            }
-        }
-        
-        // Get list of children categorie
-        //logger.info("DB=>FS : Genre:" + genreAssocie + " avec " + children.size() + " enfants: " + children);
-        for(String child : children) {
-            if (!setOfFolderNames.contains(child)) {
-                logger.warn("Expected '" + child + "' not found on fileSystem within " + dir.getName());
-                new File(dir.getAbsolutePath() + File.separator + "-- " + child).mkdirs();
-                resultat.getNotOnFileSystem().add(dir.getAbsolutePath() + File.separator + "-- " + child);
-            } else {
-                logger.info("[DB->FS][OK] " + child);
-            }
-        }
-        
-        //logger.info(dir.getAbsolutePath() + ":" + resultat.isValid());
-        if (!resultat.isValid()) {
-            logger.error("Répertoire " + dir.getAbsolutePath() + " invalide : \r\n" + resultat.toString());
-            System.exit(-2);
-        }*/
-        return resultat;
+                collect(Collectors.toCollection(TreeSet::new)),
+                // Set in BDD with : directoryName -> genreId -> Childs
+                new HashSet<>(refDbDao.getListOfChildGenre(refDbDao.searchGenreIdByGenreName(dir.getName()))));
     }
     
     /**
-     * Permet de créer les series.
+     * Analyse d'un répertoire.
      *
      * @param rootFolder
-     *     
+     *      current folder
      */
-    public void createSeries(File rootFolder) {
+    public void analyseRepertoire(File rootFolder) {        
+        GenreDto currentGenre = getGenreByFolderName(rootFolder);
+        logger.info(rootFolder.getName() + " (genre=" + currentGenre.getId() + ")");
+        Map < String, SmartSerieName > seriesFS = listeSeries(rootFolder);        
+        createSeries(seriesFS, currentGenre.getId());
         
-        /* Liste des SERIES
-        Set< File > series = Arrays.stream(
-                rootFolder.listFiles(file->file.isDirectory() && file.getName().startsWith("[SERIE] - "))).
-                collect(Collectors.toCollection(TreeSet::new));
+        // Analyse des episodes (creation, erreur)
+        seriesFS.values().stream().forEach(ssn -> analyseSerie(ssn));
         
-        for (File serie : series) {
-           SmartSerieName sfmSerie = new SmartSerieName(serie.getName());
-           if (!docudb.isSerieExist(sfmSerie.getTitre())) {
-               logger.info("Creation de la serie : '" + sfmSerie.getTitre() + "' (" + serie.getAbsolutePath() + ")");
-               int genre = docudb.searchGenreIdByGenreName(rootFolder.getName().replaceAll("-- ", ""));
-               docudb.createSerie(sfmSerie.getTitre(), genre, sfmSerie.getAnneeStart(), sfmSerie.getAnneeEnd(), sfmSerie.isVo());
-           }
-        }*/
-    }
-    
-    /**
-     * Appel en récursif pour analyser un répertoire.
-     *
-     * @param rootFolder
-     */
-    public void analyseRepertoire(File rootFolder) {
-        
-        // Ajouter les séries éventuellement manquantes dans la base de données.
-        createSeries(rootFolder);
-        
-        // Gestion des séries au niveau 1 : Documentaires > Genre > [SERIE]
-        Arrays.stream(rootFolder.listFiles(file->file.isDirectory() && file.getName().startsWith("[SERIE] - "))).
-                collect(Collectors.toCollection(TreeSet::new)).forEach(file -> analyseSerie(file));
-        
-        // Gestion des séries au niveau 2..n (par recursivité)
-        Arrays.stream(rootFolder.listFiles(file->file.isDirectory())).
+        // Appels Récursif si commence par "--" (sous-genre)
+        Arrays.stream(rootFolder.listFiles(file->file.isDirectory() && file.getName().startsWith("--"))).
                 collect(Collectors.toCollection(TreeSet::new)).forEach(file -> analyseRepertoire(file));
         
-        // Analysons maintenant les répertoires qui ne sont pas des series ==> Les documentaires
+        /* Analysons maintenant les répertoires qui ne sont pas des series ==> Les documentaires
         Arrays.stream(rootFolder.listFiles(
                 file->file.isDirectory() && 
                 !file.getName().startsWith("[SERIE] - ") &&
@@ -188,6 +133,87 @@ public class DocuServices {
                 !file.getName().startsWith("Saison") &&
                 !Character.isDigit(file.getName().charAt(0)))).
             collect(Collectors.toCollection(TreeSet::new)).forEach(file -> processDocumentaire(file));
+            */
+    }
+    
+    /** Synchronization Series. */
+    private void createSeries(Map < String, SmartSerieName > seriesFS, int genre) {
+        // Liste des séries en base
+        Set < String > setOfSeriesInDb = serieDbDao.getSeriesByGenre(genre).stream(). //
+                map(s -> s.getTitre()). //
+                collect(Collectors.toCollection(TreeSet::new));        
+                
+        // Existence et Genres sont les mêmes
+        ComparaisonFsDb compare = compareFSandDb(seriesFS.keySet(), setOfSeriesInDb);
+        if (!compare.getNotOnFileSystem().isEmpty()) {
+            logger.error("Series non trouvées sur le disque " + compare.toString());
+            System.exit(-4);
+        }
+        
+        // Chaque série non trouvée est créée
+        compare.getNotInDatabase().stream().forEach(s-> createSerie(seriesFS.get(s)));
+    }
+    
+    /**
+     * Permet de créer les series si nécessaires et détecte les séries en BDD et pas sur FS
+     *
+     * @param rootFolder
+     *      repertoire de travail
+     */
+    private void createSerie(SmartSerieName ssn) {
+      if (serieDbDao.exist(ssn.getTitre())) {
+          throw new IllegalArgumentException("Une serie existe deja avec le titre " + ssn.getTitre());
+      }
+      serieDbDao.createSerie(ssn.getTitre(), 
+              getGenreByFolderName(ssn.getFolder().getParentFile()).getId(), 
+              ssn.getAnneeStart(),ssn.getAnneeEnd(), ssn.isVo());
+      logger.info("Création de : '" + ssn.getTitre() + "' (" + ssn.getFolder().getName() + ")");
+    }
+    
+    /**
+     * Get genre id from Name.
+     *
+     * @param folder
+     *      target folder
+     * @return
+     */
+    private GenreDto getGenreByFolderName(File folder) {
+        return refDbDao.getGenreById(
+                refDbDao.searchGenreIdByGenreName(
+                        folder.getName().replaceAll("-- ", "")));
+    }
+    
+    /**
+     * Liste tous les dossiers qui sont des séries. [SERIE]
+     * 
+     * @param parent
+     *      liste des séries
+     * @return
+     *      liste des sériess
+     */
+    private Map < String, SmartSerieName > listeSeries(File parent) {
+        return Arrays.stream(parent.//
+                listFiles(f->f.isDirectory() && f.getName().startsWith("[SERIE] - "))).//
+                map(file -> new SmartSerieName(file)).//
+                collect(Collectors.toMap(SmartSerieName::getTitre, Function.identity()));
+    }
+    
+    /**
+     * Compare 2 sets a detect discrepancies.
+     *
+     * @param fsSet
+     *      set on file system
+     * @param dbSet
+     *      set on DB
+     * @return
+     */
+    private ComparaisonFsDb compareFSandDb(Set < String > fsSet, Set < String > dbSet) {
+        ComparaisonFsDb result = new ComparaisonFsDb();
+        result.getNotInDatabase().addAll(fsSet);
+        result.getNotInDatabase().removeAll(dbSet);
+        result.getNotOnFileSystem().addAll(dbSet);
+        result.getNotOnFileSystem().removeAll(fsSet);
+        return result;
     }
     
     /**
@@ -195,33 +221,22 @@ public class DocuServices {
      *
      * @param folder
      */
-    private void analyseSerie(File folder) {
-        logger.debug("Processing Serie: " + folder.getName());
+    private void analyseSerie(SmartSerieName ssn) {        
+        logger.info("Serie [" + ssn.getTitre() + "]");
+        SerieDto dto = serieDbDao.getSerieById(serieDbDao.getSerieIdByName(ssn.getTitre()));
         
-        /*Pour le nom de la serie on enleve le prefixe et les eventuelles dates
-        String serieName = folder.getName().replaceAll("\\[SERIE\\] - ", "").replaceAll("\\(vo\\)", "").trim();
-        if (serieName.lastIndexOf("(") != -1) {
-            serieName = serieName.substring(0,  serieName.lastIndexOf("(")).trim();
-        }
-        
-        / Collecte de l'identifiant depuis le nom
-        int serieID = docudb.getSerieIdBySerieName(serieName);
-        
-        // Recherche le pattern NN - Element
-        File[] episodes = folder.listFiles(file -> new SmartFileName(file.getName()).startByNumber());
-        
+        // Recherche le pattern "NN - TITRE",x dossier ou fichier
+        File[] episodes = ssn.getFolder().listFiles(file -> new SmartFileName(file.getName()).startByNumber());
+       
         // Ce ne sont PAS des épisodes, alors sans doute des Saisons 
         if (episodes == null || episodes.length == 0) {
-            
             // Liste des saisons du coup
-            File[] saisons = folder.listFiles(file -> file.getName().startsWith("Saison"));
-            
+            File[] saisons = ssn.getFolder().listFiles(file -> file.getName().startsWith("Saison"));
             // Ni des episodes, ni des saisons ==> Erreur ICI
             if (saisons == null || saisons.length == 0) {
-               logger.error("ERREUR dans le répertoire " + folder.getAbsolutePath() + " no Saison et pas de 01 XXX");
-                System.exit(-3);
+               logger.error("ERREUR dans le répertoire " + ssn.getFolder().getAbsolutePath() + " no Saison et pas de 01 XXX");
+                System.exit(-5);
             }
-            
             // Boucle sur les saisons
             for (File saisonX : saisons) {
                 int annee = 1900;
@@ -233,7 +248,8 @@ public class DocuServices {
                     // Le format est Saison AA (YYYY)
                     nbSaison = Integer.parseInt(tmps.substring(0, tmps.lastIndexOf("(")).trim());
                     annee = Integer.parseInt(tmps.substring(tmps.lastIndexOf("(") + 1, tmps.length() - 1));
-                    logger.debug("Titre=" + serieName + "(" + serieID + ") Saison=" + nbSaison + " annee=" + annee);
+                    logger.debug("Titre=" + dto.getTitre() + 
+                            "(" + dto.getId() + ") Saison=" + nbSaison + " annee=" + annee);
                 } else {
                     // Le format est Saison AA, pas de date
                     nbSaison = Integer.parseInt(tmps);
@@ -242,20 +258,19 @@ public class DocuServices {
                 }
 
                 // On donne un répertoire de Saison contenant forcément des épisodes
-                processSaison(saisonX, serieID, nbSaison, annee);
+                analyseSaison(saisonX, dto.getId(), nbSaison, annee);
             }
          
-        } else { // Dans le répertoire de la serie on a trouve des épisodes (pas de saison)
-            
-            // Alors on en conclue une saison unique
-            int nbSaison = 1 ;
-            
+        } else {
             // L'annee est portée par le répertoire parent (ou chaque episode)
-            String annee = folder.getName().substring(folder.getName().lastIndexOf("(")+1, folder.getName().length() - 1);
+            String annee = ssn.getFolder().getName().substring(
+                    ssn.getFolder().getName().lastIndexOf("(")+1, ssn.getFolder().getName().length() - 1);
           
             // Si pas d'annee trouve on met 1900 comme valeur par defaut
-            processSaison(folder, serieID, nbSaison, isNumeric(annee) ? Integer.parseInt(annee) : 1900);
-        }*/
+            // Dans le répertoire de la serie on a trouve des épisodes (pas de saison)
+            analyseSaison(ssn.getFolder(), 
+                   dto.getId(), 1, isNumeric(annee) ? Integer.parseInt(annee) : 1900);
+        }
     }
     
     /**
@@ -324,9 +339,10 @@ public class DocuServices {
      * @param annee
      *      annee pour cette saison
      */
-    private void processSaison(File folderSaison, int serie, int nbSaison, int annee) {
+    private void analyseSaison(File folderSaison, int serie, int nbSaison, int annee) {
+        SerieDto dto = serieDbDao.getSerieById(serie);
         
-        /* Recherche le pattern NN - Element
+        // Recherche le pattern "NN - EPISODE NAME"
         File[] episodes = folderSaison.listFiles(file -> new SmartFileName(file.getName()).startByNumber());
         
         // On s'attend forcément a avoir des episodes ici alors erreur au besoin
@@ -335,7 +351,7 @@ public class DocuServices {
             System.exit(-4);
         }
         
-        // On vérifie si l'on travaille avec des répertoires ou non
+        // On vérifie si l'on travaille avec des répertoires
         if (!episodes[0].isDirectory()) {
             
             // On liste les fichiers qui ne sont pas des sous titres
@@ -355,9 +371,7 @@ public class DocuServices {
               ep.setAnnee(smf.containsAnnee() ? smf.getAnnee() : annee);
               ep.setSaison(nbSaison);
               ep.setSerie(serie);
-              
-              // Creation de l'episode dans la base (si non existant), ou update
-              docudb.createEpisode(ep);
+              analyseEpisode(ep, dto);
             }
         } else {
            
@@ -403,11 +417,31 @@ public class DocuServices {
                 }
                 ep.setDuree(duree);
                 ep.setTaille(fileSize);
-                
-                // Creation si non existant, update sinon
-                docudb.createEpisode(ep);
+                analyseEpisode(ep, dto);
             }
-        }*/
+        }
+    }
+    
+    private void analyseEpisode(Episode ep, SerieDto serie) {
+        // Episode existe Déjà
+        if (episodeDbDao.existID(ep.getSerie(), ep.getSaison(), ep.getEpisode())) {
+            // Comparaison des titres
+            Episode old = episodeDbDao.getEpisodeById(ep.getSerie(), ep.getSaison(), ep.getEpisode());
+            if (!old.getTitre().equalsIgnoreCase(ep.getTitre())) {
+                logger.error("Titre episode désynchronisés ");
+                logger.error("serie=" + serie.getTitre());
+                logger.error("db=" + old.getTitre());
+                logger.error("fs=" + ep.getTitre());
+                logger.error("SELECT * FROM t_episode WHERE (SERIE = " + ep.getSerie() + ") and "
+                        + "(SAISON = "+ep.getSaison()+") AND "
+                        + "(EPISODE = "+ep.getEpisode()+")");
+                System.exit(-7);
+            } else {
+                logger.info(ep.getSaison() + "x" + ep.getEpisode() + " - " + ep.getTitre());
+            }
+        } else {
+            logger.info("Create [" + serie.getTitre() + "] - " + ep.getSaison() + "x" + ep.getEpisode() +  " - " + ep.getTitre());
+        }
     }
    
     /**

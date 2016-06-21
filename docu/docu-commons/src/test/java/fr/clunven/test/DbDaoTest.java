@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import fr.clunven.docu.CommonsConfig;
 import fr.clunven.docu.dao.db.ReferentialDbDao;
+import fr.clunven.docu.dao.db.SerieDbDao;
 import fr.clunven.docu.dao.db.UserDbDao;
 import fr.clunven.docu.dao.db.dto.GenreDto;
 import fr.clunven.docu.dao.db.dto.SubGenreDto;
@@ -50,6 +51,9 @@ public class DbDaoTest {
     @Autowired
     private ReferentialDbDao refDbDao;
     
+    @Autowired
+    private SerieDbDao serieDbDao;
+    
     @Test
     public void testRef() {
         Map < GenreDto, List < SubGenreDto > > elemets = refDbDao.getMenu();
@@ -59,6 +63,12 @@ public class DbDaoTest {
         }
     }
     
+    @Test
+    public void testSerie() {
+        for(SubGenreDto dto : serieDbDao.getSerieMenu()) {
+            System.out.println(dto.getSubgenre().getName() + "-" + dto.getNb());
+        }
+    }
     
     @Test
     public void testDbConnect() {
@@ -66,9 +76,13 @@ public class DbDaoTest {
         
        UserDto dto = userDbDao.loadUserByUid("clu");
        System.out.println(dto.getPassword());
-       
-       
     }
     
+    @Test
+    public void testReferentials() {
+        dbDao.getFormats();
+        dbDao.getLangues();
+        dbDao.getPays();
+    }
       
 }

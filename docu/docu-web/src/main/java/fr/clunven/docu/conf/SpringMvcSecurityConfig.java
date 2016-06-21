@@ -86,7 +86,6 @@ public class SpringMvcSecurityConfig extends WebSecurityConfigurerAdapter implem
 	@Autowired
 	public void configureGlobal(AuthenticationManagerBuilder auth)
 	throws Exception {
-		//auth.authenticationProvider(authProvider);
 		auth.userDetailsService(authServicer);
 	}
 

@@ -1,6 +1,5 @@
 package fr.clunven.docu.web.controller;
 
-import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -41,8 +40,8 @@ public class HomeController extends BaseController {
     public ModelAndView showPage(HttpServletRequest request, HttpServletResponse response) throws Exception {
     	
     	// Get Information for
-    	String action = request.getParameter("action");
-        String id     = request.getParameter("id");
+    	//String action = request.getParameter("action");
+        //String id     = request.getParameter("id");
         //log.info("Event " + id + "  has been mask as read");
        
         ModelAndView mav = renderPage(request);

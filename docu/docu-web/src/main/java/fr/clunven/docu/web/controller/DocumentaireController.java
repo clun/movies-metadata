@@ -1,6 +1,5 @@
 package fr.clunven.docu.web.controller;
 
-import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 

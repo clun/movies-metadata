@@ -1,7 +1,13 @@
 package fr.clunven.docu.domain;
 
+import java.io.File;
 import java.util.regex.Pattern;
 
+/**
+ * Permet de parser un répertoire de série.
+ *
+ * @author Cedrick LUNVEN (@clunven)
+ */
 public class SmartSerieName {
 
     /** Year pattern. */
@@ -33,7 +39,21 @@ public class SmartSerieName {
 
     /** here is the filename. */
     private String titre = "";
+    
+    /** relative file. */
+    private File folder;
 
+    /**
+     * Constructor for folder.
+     *
+     * @param currentFile
+     *      current folder
+     */
+    public SmartSerieName(File currentFile) {
+        this(currentFile.getName());
+        this.folder = currentFile;
+    }
+    
     /**
      * Constructor and parsing.
      * 
@@ -55,7 +75,7 @@ public class SmartSerieName {
         }
 
         parseAnnee();
-        titre = titre.replaceAll("-- ", "").trim();
+        titre = titre.replaceAll("-- ", "");
         
         if (containsSingleAnnee()) {
             titre = titre.replaceAll("\\(" + anneeStart + "\\)", "");
@@ -64,7 +84,7 @@ public class SmartSerieName {
         if (containsSlotAnnee()) {
             titre = titre.replaceAll("\\(" + anneeStart + "-" + anneeEnd + "\\)", "");
         }
-
+        titre = titre.trim();
     }
 
     /**
@@ -174,6 +194,25 @@ public class SmartSerieName {
      */
     public int getAnneeEnd() {
         return anneeEnd;
+    }
+
+    /**
+     * Getter accessor for attribute 'folder'.
+     *
+     * @return
+     *       current value of 'folder'
+     */
+    public File getFolder() {
+        return folder;
+    }
+
+    /**
+     * Setter accessor for attribute 'folder'.
+     * @param folder
+     * 		new value for 'folder '
+     */
+    public void setFolder(File folder) {
+        this.folder = folder;
     }
 
 }

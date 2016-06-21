@@ -4,7 +4,7 @@
 
 <header class="header">
 
-	<a href="#" class="logo" >
+	<a href="<c:url value='/home.htm'/>" class="logo" >
 	   <img src="<c:url value='img/docus.png'/>" alt="" height="60px" style="padding: 10px; margin-top: -5px" />
 	    &nbsp;<b>D O C U S</b>
 	</a>
@@ -12,6 +12,13 @@
 	<!-- Header Navbar: style can be found in header.less -->
 	<nav class="navbar navbar-static-top" role="navigation">
 		
+		<a href="#" class="navbar-btn sidebar-toggle" data-toggle="offcanvas" role="button">
+        	<span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </a>
+                
 		<div class="navbar-right">
         
 			<ul class="nav navbar-nav">

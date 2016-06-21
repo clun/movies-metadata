@@ -7,8 +7,20 @@
         <pattern>/css/*</pattern>
         <pattern>/js/*</pattern>
         <pattern>/fonts/*</pattern>
+        <pattern>/api/*</pattern>
     </excludes> 
     
+      <!-- Documentaires -->
+    <decorator name="docugenre" page="layout-docugenre.jsp">
+        <pattern>/documentaireByGenre.htm</pattern>
+        <pattern>/documentaireDisplay.htm*</pattern>
+    </decorator>
+   
+    <!--Login -->
+     <decorator name="login" page="layout-login.jsp">
+        <pattern>/login.htm</pattern>
+     </decorator>
+     
     <!-- Home -->
     <decorator name="default" page="layout-default.jsp">
         <pattern>/*</pattern>
@@ -16,15 +28,6 @@
         <pattern>/error.jsp</pattern>                
     </decorator>
     
-    <!-- Home -->
-    <decorator name="start" page="layout-public.jsp">
-        <pattern>/start.htm</pattern>
-        <pattern>/index.jsp</pattern>
-    </decorator>
-    
-    <!--Login -->
-     <decorator name="login" page="layout-login.jsp">
-        <pattern>/login.htm</pattern>
-     </decorator>
+  
     
 </decorators>

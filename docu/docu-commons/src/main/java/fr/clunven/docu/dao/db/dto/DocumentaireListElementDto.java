@@ -1,8 +1,17 @@
 package fr.clunven.docu.dao.db.dto;
 
-public class DocumentaireListElementDto {
+import java.io.Serializable;
+
+/** To be displayed in the "LIST".
+ * 
+ * @author Cedrick LUNVEN (@clunven)
+ */
+public class DocumentaireListElementDto implements Serializable{
     
-    private int uid;
+    /** Serie ID. */
+    private static final long serialVersionUID = 3270241519958652060L;
+
+    private int id;
     
     private String titre;
     
@@ -11,25 +20,6 @@ public class DocumentaireListElementDto {
     private String genre;
     
     private boolean vu = false;
-
-    /**
-     * Getter accessor for attribute 'uid'.
-     *
-     * @return
-     *       current value of 'uid'
-     */
-    public int getUid() {
-        return uid;
-    }
-
-    /**
-     * Setter accessor for attribute 'uid'.
-     * @param uid
-     * 		new value for 'uid '
-     */
-    public void setUid(int uid) {
-        this.uid = uid;
-    }
 
     /**
      * Getter accessor for attribute 'titre'.
@@ -105,6 +95,25 @@ public class DocumentaireListElementDto {
      */
     public void setVu(boolean vu) {
         this.vu = vu;
+    }
+
+    /**
+     * Getter accessor for attribute 'id'.
+     *
+     * @return
+     *       current value of 'id'
+     */
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * Setter accessor for attribute 'id'.
+     * @param id
+     * 		new value for 'id '
+     */
+    public void setId(int id) {
+        this.id = id;
     }
 
 }

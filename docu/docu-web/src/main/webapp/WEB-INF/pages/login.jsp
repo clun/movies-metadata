@@ -4,13 +4,13 @@
 	 style="-moz-box-shadow: 8px 8px 12px #aaa; -webkit-box-shadow: 8px 8px 12px #aaa; box-shadow: 8px 8px 12px #555;">
 
   <div class="table-header" >
-    <img src="<c:url value='img/docus.png'/>" alt="" height="60px" style="padding: 10px; margin-top: -5px" />
-    &nbsp;<b>Base de documentaires</a>
+    <img src="<c:url value='img/docus.png'/>" height="60px" style="padding: 10px; margin-top: -5px" />
+    &nbsp;<b>Base de documentaires</b>
   </div>
 
   <sec:authorize access="isAnonymous()">
    <form action="<c:url value='/j_security_check.htm'/>" method="post">
-    <div class="body bg-gray">
+    <div class="body" style="background-color:#F0F0F0">
       <br/>
       <span style="color:black;font-weight:normal">
 	    <i class="fa fa-key"></i> &nbsp;Saisissez vos identifiants :
@@ -52,20 +52,16 @@
 				</div>
 				</div>
 
-				<div class="table-header">
-					<center>
+				<div class="table-header" style="text-align:center">
+				
 						<button type="submit" class="btn btn-primary"
 							style="border:1px solid white;margin-bottom: 10px; margin-top: 10px; width: 100px">
 							<i class="fa fa-sign-in"></i>&nbsp;Entrer&nbsp;
 						</button>
-					</center>
+					
 				</div>
 		</form>
 	</sec:authorize>
 
 </div>
-</div>
 <!-- /.box -->
-
-
-</div>

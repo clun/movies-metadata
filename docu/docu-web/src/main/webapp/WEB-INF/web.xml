@@ -30,6 +30,25 @@
 	<listener>
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>
+
+	<!-- Enforce UTF8 -->
+	<filter>
+		<filter-name>encodingFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+		<init-param>
+			<param-name>forceEncoding</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>encodingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
 	
 	 <!-- SiteMesh -->
     <filter>
@@ -67,8 +86,9 @@
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>dispatcher</servlet-name>
-		<url-pattern>*.htm</url-pattern>
+		<url-pattern>/</url-pattern>
 	</servlet-mapping>
+	
 	
 	<servlet>
 		<servlet-name>jsp</servlet-name>
@@ -102,6 +122,10 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>default</servlet-name>
+		<url-pattern>*.mp4</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
 		<url-pattern>*.png</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
@@ -131,7 +155,7 @@
     
 	<!-- Welcome file -->
 	<welcome-file-list>
-		<welcome-file>/home.htm</welcome-file>
+		<welcome-file>/documentaire.htm</welcome-file>
 	</welcome-file-list>
 	
 	<!-- Define error pages -->

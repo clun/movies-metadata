@@ -21,7 +21,7 @@ public class DocumentaireListElementRowMapper implements RowMapper< Documentaire
         dto.setAnnee(rs.getInt("ANNEE"));;
         dto.setGenre(rs.getString("GENRE"));
         dto.setTitre(rs.getString("TITRE"));
-        dto.setUid(rs.getInt("ID"));
+        dto.setId(rs.getInt("ID"));
         dto.setVu(rs.getInt("VU") == 1);
         return dto;
     }

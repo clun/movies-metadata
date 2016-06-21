@@ -158,6 +158,22 @@
 			<artifactId>commons-fileupload</artifactId>
 		</dependency>
 
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>2.6.3</version>
+    </dependency>
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.6.3</version>
+    </dependency>
+    <dependency>
+		<groupId>com.fasterxml.jackson.core</groupId>
+		<artifactId>jackson-annotations</artifactId>
+		<version>2.6.3</version>
+	</dependency>
+        
 	</dependencies>
 
 	<build>
@@ -208,6 +224,15 @@
 					</connectors>
 				</configuration>
 			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.7</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
 			
 			<!-- Work with Tomcat -->
 			<plugin>
@@ -217,7 +242,8 @@
 		        <configuration>
 		            <port>${app.port}</port>
 		            <path>${app.context}</path>
-		        	<warDirectory>${project.build.directory}</warDirectory>
+		            <warDirectory>${project.build.directory}</warDirectory>
+                    <!-- <serverXml>${project.basedir}/src/main/resources/tomcatServer.xml</serverXml> -->
 		        </configuration>
       		</plugin>
       		
