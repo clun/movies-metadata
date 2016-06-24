@@ -1,9 +1,14 @@
 package fr.clunven.docu.dao.db;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.stereotype.Repository;
 
 import fr.clunven.docu.dao.db.dto.DocumentaireDetail;
@@ -23,7 +28,7 @@ public class DocumentaryDbDao extends AbstractDaoSupport {
     
     /** Query. */
     private static final String QUERY_EXIST =
-            "SELECT COUNT(*) FROM t_documentaire WHERE UPPER(TITRE) LIKE ?";
+            "SELECT COUNT(*) FROM t_documentaire WHERE UPPER(TITRE) LIKE ? AND GENRE = ?";
     
     /** Query. */
     private static final String QUERY_GETBY_ID =
@@ -42,21 +47,25 @@ public class DocumentaryDbDao extends AbstractDaoSupport {
           + "WHERE genre = ? ORDER BY TITRE ASC";
     
     /** Query. */
+    private static final String QUERY_LISTGENRE_TITRE = 
+            "SELECT TITRE FROM t_documentaire "
+          + "WHERE genre = ? ORDER BY TITRE ASC";
+    
+    
+    /** Query. */
     private static final String QUERY_GETBYID = 
             "SELECT * FROM t_documentaire WHERE ID = ? ";
     
-    /** Query.
+    /** Query. */
     private static final String QUERY_CREATE = 
             "INSERT INTO t_documentaire (ID, TITRE, TITRE_ORIGINAL, DESCRIPTION, "
            + "REALISATEUR, ANNEE, DUREE, IMAGE, GENRE, PAYS, LANGUE, SOUSTITRES, NOTE, VU, TAILLE, FORMAT, "
            + "BITRATE, QUALITE, RESOLUTION) VALUES (NULL, ?, '', '', '', ?, ?, '', ?, NULL, 'FR', NULL, "
-           + "NULL, '0', ?, ?, ?, '0', ?)";
-     */
+           + "NULL, '0', ?, ?, ?, ?, ?)";
     
     /** Query. */
     private static final String UPDATE_QUERY = 
-            "UPDATE t_documentaire SET ANNEE=?,DUREE=?,TAILLE=?,FORMAT=?,BITRATE=?,"
-          + "RESOLUTION=? WHERE ID = ?";
+            "UPDATE t_documentaire SET TITRE=?, ANNEE=?, DUREE=?, TAILLE=?, FORMAT=?, BITRATE=?, RESOLUTION=?, QUALITE= ? WHERE ID = ?";
 
     private static final String UPDATE_QUERY_FULL =
             "UPDATE t_documentaire SET TITRE=?, TITRE_ORIGINAL=?, DESCRIPTION=?, ANNEE=?, DUREE=?, "
@@ -72,8 +81,8 @@ public class DocumentaryDbDao extends AbstractDaoSupport {
     /**
      * Tester l'existence d'une entrée dans la table t_Documentaire.
      */
-    public boolean exist(String titre) {
-        return getJdbcTemplate().queryForObject(QUERY_EXIST, Integer.class, titre.toUpperCase().trim()) > 0;
+    public boolean exist(String titre, int genre) {
+        return getJdbcTemplate().queryForObject(QUERY_EXIST, Integer.class, titre.toUpperCase().trim(), genre) > 0;
     }   
     
     public List < DocumentaireListElementDto > list() {
@@ -84,43 +93,41 @@ public class DocumentaryDbDao extends AbstractDaoSupport {
         return getJdbcTemplate().query(QUERY_LISTGENRE, FULL_ROWMAPPER, genre);
     }
     
+    public Set < String > getDocumentaireNamesByGenre(int genre) {
+        return new TreeSet<String>(
+                getJdbcTemplate().query(QUERY_LISTGENRE_TITRE, 
+                        new SingleColumnRowMapper<String>(), genre));
+    }
+    
+    public Map < String, Integer > getDocumentaireNamesMapByGenre(int genre) {
+        return getByGenre(genre).stream().
+                collect(Collectors.toMap(DocumentaireDetail::getTitre, DocumentaireDetail::getId));
+    }
+    
+    
+    
     public DocumentaireDetail getDocumentaireById(int uid) {
         return getJdbcTemplate().queryForObject(QUERY_GETBYID, FULL_ROWMAPPER, uid);
     }
     
     /**
-     * Teste que ca existe et que la resolution est nulle (batch)
+     * Create new documentaire from bean.
      *
-    private boolean isResolutionNull(String titre) {
-        return getJdbcTemplate().queryForObject(QUERY_EXIST + " AND " + CLAUSE_RESOLUTION_NULL, 
-                Integer.class, titre.toUpperCase().trim()) > 0;
-    }*/
-    
-    /**
-     * Recherche de l'identifiant unique depuis le titre.
+     * @param ep
      */
-    private int getIdFromTitle(String titre) {
-        if (!exist(titre)) {
-            throw new IllegalArgumentException("Cannot find DOCUMENTAIRE : ");
-        }
-        return getJdbcTemplate().queryForObject(QUERY_GETBY_ID, Integer.class, titre.toUpperCase().trim());
+    public void create(Documentaire ep) {
+        getJdbcTemplate().update(QUERY_CREATE, 
+                ep.getTitre(), 
+                ep.getAnnee(), ep.getDuree() / 1000 / 60, 
+                ep.getGenre(),
+                ep.getTaille() /1024 / 1024,
+                ep.getFormatCode(), 
+                ep.getBitrate(), 
+                ep.getQualite(),
+                ep.getResolution());
     }
-  
-    /**
-     * Creer si non existant, sinon met à jour.
-     *
-    public void upsert(Documentaire ep) {
-        if (!exist(ep.getTitre())) {
-            create(ep);
-        } else if (isResolutionNull(ep.getTitre())) {
-            update(ep);
-        } else {
-            logger.debug("[OK] " +  ep.getTitre());
-        }
-    }*/
-
+    
     public void update(DocumentaireDetail docu) {
-        // La première chose est de reprendre la partie ancienne et de surcharger si nécessaires
         DocumentaireDetail before = getDocumentaireById(docu.getId());
         if (docu.getImage() == null) {
             docu.setImage(before.getImage());
@@ -135,36 +142,24 @@ public class DocumentaryDbDao extends AbstractDaoSupport {
                 docu.getQualite(), docu.getResolution(),
                 docu.getId());
     }
-
-    /*
-    private void create(Documentaire ep) {
-        getJdbcTemplate().update(QUERY_CREATE, ep.getTitre(), 
-                ep.getAnnee(), ep.getDuree() / 1000 / 60, 
-                ep.getGenre(),
-                ep.getTaille() /1024 / 1024,
-                ep.getFormatCode(), 
-                ep.getBitrate(), 
-                ep.getResolution());
-       
-        logger.info("[CREATION] " + ep.getTitre()
-        + "' : annee=" + ep.getAnnee() + " duree=" + ep.getDuree() + 
-        " format=" + ep.getFormat() +
-        " resolution=" + ep.getResolution() + " bitrate=" + ep.getBitrate());
-    }*/
     
-    public void update(Documentaire ep) {
+    public void updateMetaData(int uid, Documentaire ep) {
         getJdbcTemplate().update(UPDATE_QUERY,
+                ep.getTitre(),
                 ep.getAnnee(), ep.getDuree() / 1000 / 60,  
-                ep.getTaille() /1024 / 1024,
+                ep.getTaille() / 1024 / 1024,
                 ep.getFormatCode(), 
                 ep.getBitrate(), 
-                ep.getResolution(),
-                getIdFromTitle(ep.getTitre()));
+                ep.getResolution(), uid);
         
         logger.info("[UPDATE] " + ep.getTitre()
         + "' : annee=" + ep.getAnnee() + " duree=" + ep.getDuree() + 
         " format=" + ep.getFormat() +
         " resolution=" + ep.getResolution() + " bitrate=" + ep.getBitrate());
     }
+    
+    
+    
+   
     
 }

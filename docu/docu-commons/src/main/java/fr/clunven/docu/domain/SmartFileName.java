@@ -1,5 +1,6 @@
 package fr.clunven.docu.domain;
 
+import java.io.File;
 import java.util.regex.Pattern;
 
 /**
@@ -38,6 +39,14 @@ public class SmartFileName {
     
     /** read extension if not directory. */
     private String extension;
+    
+    /** current folder. */
+    private File currentFolder;
+    
+    public SmartFileName(File currentFolder) {
+        this(currentFolder.getName());
+        this.currentFolder = currentFolder;
+    }
     
     /**
      * Constructor and parsing.
@@ -176,6 +185,25 @@ public class SmartFileName {
      */
     public String getTitre() {
         return titre;
+    }
+
+    /**
+     * Getter accessor for attribute 'currentFolder'.
+     *
+     * @return
+     *       current value of 'currentFolder'
+     */
+    public File getCurrentFolder() {
+        return currentFolder;
+    }
+
+    /**
+     * Setter accessor for attribute 'currentFolder'.
+     * @param currentFolder
+     * 		new value for 'currentFolder '
+     */
+    public void setCurrentFolder(File currentFolder) {
+        this.currentFolder = currentFolder;
     }
 
 }

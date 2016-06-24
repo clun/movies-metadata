@@ -1,5 +1,7 @@
 package fr.clunven.docu.domain;
 
+import java.io.File;
+
 import fr.clunven.docu.media.General;
 import fr.clunven.docu.media.MovieMetadata;
 import fr.clunven.docu.media.Video;
@@ -53,7 +55,23 @@ public class Documentaire {
         }
     }
     
+    public Documentaire(SmartFileName smf) {
+        this();
+        updateFileMetaData(smf);
+    }
+   
     public Documentaire(MovieMetadata mmd) {
+        this();
+        updateMovieMetaData(mmd);
+    }
+    
+    public void updateFileMetaData(SmartFileName smf) {
+        this.titre  = smf.getTitre();
+        this.vo     = smf.isVo();
+        this.annee  = smf.containsAnnee() ? smf.getAnnee() : 1900;
+    }
+    
+    public void updateMovieMetaData(MovieMetadata mmd) {
         if (mmd.get(General.DURATION).isPresent()) {
             duree = Long.parseLong(mmd.get(General.DURATION).get());
         }
@@ -61,13 +79,21 @@ public class Documentaire {
             format = mmd.get(General.FORMAT).get();
         }
         if (mmd.get(General.FILESIZE).isPresent()) {
-            taille = Long.parseLong( mmd.get(General.FILESIZE).get());
+            taille = Long.parseLong(mmd.get(General.FILESIZE).get()) /1024 / 1024;
         }
         if (mmd.get(Video.WIDTH).isPresent() && mmd.get(Video.HEIGHT).isPresent()) {
-           resolution = mmd.get(Video.WIDTH).get() + "x" + mmd.get(Video.HEIGHT).get();
+            resolution = mmd.get(Video.WIDTH).get() + "x" + mmd.get(Video.HEIGHT).get();
         }
         if (mmd.get(Video.BITRATE).isPresent()) {
             bitrate = Long.parseLong(mmd.get(Video.BITRATE).get());
+        }
+        updateQualite();
+    }
+    
+    private void updateQualite() {
+        if (taille > 0 && duree > 0) {
+            qualite=1+new Double(taille/duree/10).intValue();
+            if (qualite>5) qualite = 5;
         }
     }
 
@@ -287,5 +313,13 @@ public class Documentaire {
      */
     public void setGenre(int genre) {
         this.genre = genre;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return "[titre=" + titre + ", genre=" + genre + ", annee=" + annee + ", duree=" + duree + ", taille="
+                + taille + ", format=" + format + ", qualite=" + qualite + ", bitrate=" + bitrate + ", resolution=" + resolution
+                + ", vo=" + vo + ", extension=" + extension + "]";
     }
 }

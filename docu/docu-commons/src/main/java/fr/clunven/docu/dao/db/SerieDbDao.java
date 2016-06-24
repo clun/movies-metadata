@@ -1,8 +1,11 @@
 package fr.clunven.docu.dao.db;
 
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.stereotype.Repository;
 
 import fr.clunven.docu.dao.db.dto.SerieDto;
@@ -45,6 +48,9 @@ public class SerieDbDao extends AbstractDaoSupport {
     private static String QUERY_BYGENRE = "SELECT * FROM t_serie WHERE genre = ? order by titre";
     
     /** Serie exist with name. */
+    private static String QUERY_BYGENRE_TITRE = "SELECT TITRE FROM t_serie WHERE genre = ? order by titre";
+    
+    /** Serie exist with name. */
     private static String QUERY_BYID = "SELECT * FROM t_serie WHERE id = ?";
     
     /** Check existence from serie name (Creation Batch). */
@@ -61,6 +67,11 @@ public class SerieDbDao extends AbstractDaoSupport {
     /** Get of Serie for each genre. */
     public List < SerieDto > getSeriesByGenre(int genre) {
         return getJdbcTemplate().query(QUERY_BYGENRE, ROWMAPPER_SERIE, genre);
+    }
+    
+    public Set < String > getSerieNamesByGenre(int genre) {
+        return new TreeSet<String>(getJdbcTemplate().query(QUERY_BYGENRE_TITRE, 
+                new SingleColumnRowMapper<String>(), genre));
     }
     
     public SerieDto getSerieById(int id) {

@@ -43,7 +43,7 @@ public class EpisodeDbDao extends AbstractDaoSupport {
      *     documentaire à insérer
      */
     public void createEpisode(Episode ep, String serieImage) {
-       if (!exist(ep.getTitre() , ep.getSerie(),  ep.getSaison(), ep.getEpisode())) {
+       if (!existID(ep.getSerie(),  ep.getSaison(), ep.getEpisode())) {
            StringBuilder sqlQuery = new StringBuilder();
            sqlQuery.append("INSERT INTO t_episode (ID, TITRE, TITRE_ORIGINAL, DESCRIPTION,");
            sqlQuery.append("REALISATEUR, ANNEE, DUREE, IMAGE, LANGUE, SOUSTITRES, NOTE, VU,");
@@ -51,17 +51,21 @@ public class EpisodeDbDao extends AbstractDaoSupport {
            sqlQuery.append("VALUES (NULL, ?, '', '', '', ?, ?, ?, 'FR', NULL, NULL, '0', ?, ?, ?, '0', ?, ?, ?, ?)");
            getJdbcTemplate().update(sqlQuery.toString(), ep.getTitre(), 
                    ep.getAnnee(), ep.getDuree() / 1000 / 60, 
-                   serieImage, ep.getTaille() /1024 / 1024,
+                   serieImage, ep.getTaille() / 1024 / 1024,
                    ep.getFormatCode(), ep.getBitrate(), ep.getResolution(), ep.getSerie(),
                    ep.getSaison(), ep.getEpisode());
-           logger.info("[CREATION] " + ep.getTitre() 
-           + "' : annee=" + ep.getAnnee() + " duree=" + ep.getDuree() + 
-           " episode=" + ep.getEpisode() + " saison=" + ep.getSaison() +
-           " serie=" + ep.getSerie() + " format=" + ep.getFormat() +
-           " resolution=" + ep.getResolution() + " bitrate=" + ep.getBitrate() + " taille=" + ep.getTaille());
        } else {
-           logger.debug("[OK] " + ep.getTitre());
+           logger.debug(" -> Already exist");
        }
+    }
+    
+    public void updateEpisodeFileInformation(Episode ep) {
+        StringBuilder sqlQuery = new StringBuilder();
+        sqlQuery.append("UPDATE t_episode SET DUREE= ?, TAILLE= ?, FORMAT= ?, BITRATE= ?, QUALITE=?, RESOLUTION=? ");
+        sqlQuery.append("WHERE (SERIE=?) AND (SAISON=?) AND (EPISODE=?)");
+        getJdbcTemplate().update(sqlQuery.toString(), ep.getDuree(), ep.getTaille(), 
+                ep.getFormatCode(), ep.getBitrate(), ep.getQualite(), ep.getResolution(),
+                ep.getSerie(), ep.getSaison(), ep.getEpisode());
     }
 
 }
