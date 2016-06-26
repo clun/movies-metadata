@@ -1,7 +1,5 @@
 package fr.clunven.docu.domain;
 
-import java.io.File;
-
 import fr.clunven.docu.media.General;
 import fr.clunven.docu.media.MovieMetadata;
 import fr.clunven.docu.media.Video;

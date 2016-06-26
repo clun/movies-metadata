@@ -1,9 +1,8 @@
 package fr.clunven.docu.service;
 
+import static fr.clunven.docu.service.BatchPredicates.sousGenreFolder;
 import static fr.clunven.docu.service.BatchPredicates.validFolderDocumentaires;
 import static fr.clunven.docu.service.BatchPredicates.validMovieFiles;
-import static fr.clunven.docu.service.BatchPredicates.sousGenreFolder;
-
 import static java.util.Arrays.stream;
 
 import java.io.File;
@@ -15,6 +14,7 @@ import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.ff4j.FF4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +43,9 @@ public class BatchServices {
 
     /** logger for this class. */
     private Logger logger = LoggerFactory.getLogger(BatchServices.class);
+    
+    @Autowired
+    private FF4j ff4j;
     
     @Autowired
     private ReferentialDbDao refDbDao;
@@ -163,32 +166,35 @@ public class BatchServices {
         logger.info(rootFolder.getName() + " (genre=" + currentGenre.getId() + ")");
         
         // Gestion des séries comme un lot 
-        Set < String > seriesDB = serieDbDao.getSerieNamesByGenre(currentGenre.getId());
-        Map < String, SmartSerieName > seriesFS = listeSeries(rootFolder);     
-        ComparaisonFsDb fsdb1 = compareFSandDb(seriesFS.keySet(), seriesDB);
-        if (!fsdb1.getNotOnFileSystem().isEmpty()) {
-            logger.error("Erreur: Documentaires uniquement en BDD " + fsdb1.getNotOnFileSystem());
-            System.exit(-9);
-        }
-        // On crée les series qui ne sont pas encore en base
-        fsdb1.getNotInDatabase().stream().forEach(s-> createSerie(seriesFS.get(s)));
-        // On analyse toutes les séries (création et update des episodes)
-        seriesFS.values().stream().forEach(ssn -> analyseSerie(ssn));
-        
-        /* Gestion des documentaires comme un lot
-        Map < String, Integer >       docusDB = docuDbDao.getDocumentaireNamesMapByGenre(currentGenre.getId());
-        Map < String, SmartFileName > docusFS = listeDocumentaires(rootFolder);
-        ComparaisonFsDb fsdb = compareFSandDb(docusFS.keySet(), docusDB.keySet());
-        if (!fsdb.getNotOnFileSystem().isEmpty()) {
-            logger.error("Some documentaires is not in FS... ");
-            for(String titre : fsdb.getNotOnFileSystem()) {
-                logger.error("id=" + docusDB.get(titre) + ", titre= " + titre);
+        if (ff4j.check("handleSerie")) {
+            Set < String > seriesDB = serieDbDao.getSerieNamesByGenre(currentGenre.getId());
+            Map < String, SmartSerieName > seriesFS = listeSeries(rootFolder);     
+            ComparaisonFsDb fsdb1 = compareFSandDb(seriesFS.keySet(), seriesDB);
+            if (!fsdb1.getNotOnFileSystem().isEmpty()) {
+                logger.error("Erreur: Documentaires uniquement en BDD " + fsdb1.getNotOnFileSystem());
+                System.exit(-9);
             }
-            System.exit(-10);
+            // On crée les series qui ne sont pas encore en base
+            fsdb1.getNotInDatabase().stream().forEach(s-> createSerie(seriesFS.get(s)));
+            // On analyse toutes les séries (création et update des episodes)
+            seriesFS.values().stream().forEach(ssn -> analyseSerie(ssn));
         }
-        // On analyse tous les documentaires (certains update)
-        //docusFS.values().stream().forEach(sfm -> analyseDocumentaire(sfm, currentGenre.getId()));
-        */
+        
+        // Gestion des documentaires comme un lot
+        if (ff4j.check("handleDocus")) {
+            Map < String, Integer >       docusDB = docuDbDao.getDocumentaireNamesMapByGenre(currentGenre.getId());
+            Map < String, SmartFileName > docusFS = listeDocumentaires(rootFolder);
+            ComparaisonFsDb fsdb = compareFSandDb(docusFS.keySet(), docusDB.keySet());
+            if (!fsdb.getNotOnFileSystem().isEmpty()) {
+                logger.error("Documentaires en base et pas sur le disque (FATAL):");
+                for(String titre : fsdb.getNotOnFileSystem()) {
+                    logger.error("id=" + docusDB.get(titre) + ", titre=" + titre);
+                }
+                System.exit(-10);
+            }
+            // On analyse tous les documentaires (certains update)
+            docusFS.values().stream().forEach(sfm -> analyseDocumentaire(sfm, currentGenre.getId()));
+        }
         
         // Appels Récursif si commence par "--" (sous-genre)
         stream(rootFolder.listFiles()).filter(sousGenreFolder()).forEach(file -> analyseRepertoire(file));
@@ -304,7 +310,7 @@ public class BatchServices {
                             "(" + dto.getId() + ") Saison=" + nbSaison + " annee=" + annee);
                 } else {
                     // Le format est Saison AA, pas de date
-                    nbSaison = Integer.parseInt(tmps);
+                    nbSaison = Integer.parseInt(tmps.trim());
                     // Logger pour traitements
                     logger.warn("Cannot find annee of saison " + saisonX.getAbsolutePath());
                 }
@@ -323,6 +329,25 @@ public class BatchServices {
             analyseSaison(ssn.getFolder(), 
                    dto.getId(), 1, isNumeric(annee) ? Integer.parseInt(annee) : 1900);
         }
+    }
+    
+    /**
+     * Format execution time for log.
+     *
+     * @param executionTime
+     *          current execution time in millis
+     * @return
+     */
+    public String formatExecutionTime(long executionTime) {
+        long min = executionTime / (1000 * 60L);
+        executionTime = executionTime - min * 1000 * 60L;
+        long sec = executionTime / 1000L;
+        long millis = executionTime - sec * 1000L;
+        StringBuilder sb = new StringBuilder();
+        sb.append(min + " min. ");
+        sb.append(sec + " sec. ");
+        sb.append(millis + " millis");
+        return sb.toString();
     }
     
     /**
@@ -439,15 +464,15 @@ public class BatchServices {
        stream(repertoireDocu.listFiles()).filter(validMovieFiles()).
            forEach(f -> docu.updateMovieMetaData(new MovieMetadata(f.getAbsolutePath())));
        if (!docuDbDao.exist(docu.getTitre(), idGenre)) {
+           logger.info("-> Create " + docu);
            if (!modeSimulation) {
                docuDbDao.create(docu);
            }
-           logger.info("-> Create " + docu);
-       } else {
+       } else if (docu.getFormat() == null || "".equals(docu.getFormat())) {
+           logger.info("-> Update " + docu);
            if (!modeSimulation) {
                docuDbDao.updateMetaData(idGenre, docu);
            }
-           logger.info("-> Update " + docu);
        }
    }
   

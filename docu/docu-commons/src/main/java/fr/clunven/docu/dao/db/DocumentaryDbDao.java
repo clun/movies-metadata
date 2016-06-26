@@ -1,13 +1,12 @@
 package fr.clunven.docu.dao.db;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.stereotype.Repository;
 
@@ -22,18 +21,11 @@ import fr.clunven.docu.domain.Documentaire;
  */
 @Repository("docu.dao.db.documentary")
 public class DocumentaryDbDao extends AbstractDaoSupport {
-   
-    /** logger for this class. */
-    private Logger logger = LoggerFactory.getLogger(DocumentaryDbDao.class);
     
     /** Query. */
     private static final String QUERY_EXIST =
             "SELECT COUNT(*) FROM t_documentaire WHERE UPPER(TITRE) LIKE ? AND GENRE = ?";
-    
-    /** Query. */
-    private static final String QUERY_GETBY_ID =
-            "SELECT ID FROM t_documentaire WHERE UPPER(TITRE) LIKE ?";
-
+ 
     /** list documentary. */
     private static final String QUERY_GETDOCUMENTARYLIST =
             "SELECT D.ID, D.TITRE, D.ANNEE, D.VU, G.nom as GENRE "
@@ -100,11 +92,12 @@ public class DocumentaryDbDao extends AbstractDaoSupport {
     }
     
     public Map < String, Integer > getDocumentaireNamesMapByGenre(int genre) {
-        return getByGenre(genre).stream().
-                collect(Collectors.toMap(DocumentaireDetail::getTitre, DocumentaireDetail::getId));
+        Map < String, Integer > documentairesMap = new HashMap<>();
+        for (DocumentaireDetail dd : getByGenre(genre)) {
+            documentairesMap.put(dd.getTitre(), dd.getId());
+        }
+        return documentairesMap;
     }
-    
-    
     
     public DocumentaireDetail getDocumentaireById(int uid) {
         return getJdbcTemplate().queryForObject(QUERY_GETBYID, FULL_ROWMAPPER, uid);
@@ -146,20 +139,13 @@ public class DocumentaryDbDao extends AbstractDaoSupport {
     public void updateMetaData(int uid, Documentaire ep) {
         getJdbcTemplate().update(UPDATE_QUERY,
                 ep.getTitre(),
-                ep.getAnnee(), ep.getDuree() / 1000 / 60,  
+                ep.getAnnee(), 
+                ep.getDuree() / 1000 / 60,  
                 ep.getTaille() / 1024 / 1024,
                 ep.getFormatCode(), 
-                ep.getBitrate(), 
-                ep.getResolution(), uid);
-        
-        logger.info("[UPDATE] " + ep.getTitre()
-        + "' : annee=" + ep.getAnnee() + " duree=" + ep.getDuree() + 
-        " format=" + ep.getFormat() +
-        " resolution=" + ep.getResolution() + " bitrate=" + ep.getBitrate());
+                ep.getBitrate(),
+                ep.getResolution(),
+                ep.getQualite(),uid);
     }
-    
-    
-    
-   
     
 }

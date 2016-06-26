@@ -24,6 +24,12 @@
 			<version>${project.version}</version>
 		</dependency>
 		
+		<dependency>
+			<groupId>org.ff4j</groupId>
+			<artifactId>ff4j-core</artifactId>
+			<version>1.5</version>
+		</dependency>
+		
 		<!-- Test -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -34,7 +40,7 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-test</artifactId>
 			<scope>test</scope>
-		</dependency>		
+		</dependency>
 
 	</dependencies>
 

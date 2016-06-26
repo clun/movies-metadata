@@ -5,7 +5,6 @@ import java.sql.SQLException;
 
 import org.springframework.jdbc.core.RowMapper;
 
-import fr.clunven.docu.dao.db.dto.PaysDto;
 import fr.clunven.docu.dao.db.dto.SerieDto;
 
 public class SerieRowMapper implements RowMapper < SerieDto > {
