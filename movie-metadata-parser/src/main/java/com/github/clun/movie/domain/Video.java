@@ -1,4 +1,4 @@
-package fr.clunven.mediainfo.domain;
+package com.github.clun.movie.domain;
 
 /**
  * Identifier for Video metadata.

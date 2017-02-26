@@ -1,4 +1,4 @@
-package fr.clunven.mediainfo.jna;
+package com.github.clun.movie.jna;
 
 import java.io.Closeable;
 import java.io.File;

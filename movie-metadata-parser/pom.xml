@@ -5,7 +5,7 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<!-- ~ COORDINATES ~ -->
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<groupId>fr.clunven</groupId>
+	<groupId>com.github.clun.movie</groupId>
 	<artifactId>movie-metadata-parser</artifactId>
 	<name>movie-metadata-parser</name>
 	<version>1.0-SNAPSHOT</version>

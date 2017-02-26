@@ -1,11 +1,8 @@
-package fr.clunven.mediainfo.domain;
+package com.github.clun.movie.domain;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
-import fr.clunven.mediainfo.jna.MediaInfo;
 
 /**
  * Informations relatives to a movie file.
@@ -26,59 +23,30 @@ public class MovieMetadata {
     /** metadata relative to video track. */
     private Map < Video, String> videoKeys = new HashMap<>();
     
+    public MovieMetadata(String filePath) {
+        this.path = filePath;
+    }
+    
     /** {@inheritDoc} */
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("\r\nGENERAL:\r\n");
+        sb.append("\r\n[KEYS GENERAL]\r\n");
         for (General g : generalKeys.keySet()) {
             sb.append(g + "=" + generalKeys.get(g) + "\r\n");
         }
         
-        sb.append("\r\nAUDIO:\r\n");
+        sb.append("\r\n[AUDIO]\r\n");
         for (Audio g : audioKeys.keySet()) {
             sb.append(g + "=" + audioKeys.get(g) + "\r\n");
         }
         
-        sb.append("\r\nVIDEO:\r\n");
+        sb.append("\r\n[VIDEO]\r\n");
         for (Video g : videoKeys.keySet()) {
             sb.append(g + "=" + videoKeys.get(g) + "\r\n");
         }
         return sb.toString();
     }
     
-    /**
-     * Read Metadata of file
-     */
-    private void parseFile() {
-        File file         = new File(path);
-        MediaInfo info    = new MediaInfo();
-        info.open(file);
-        for (General gKey : General.values()) {
-            String val = info.get(MediaInfo.StreamKind.General, 0, gKey.getKey(),  MediaInfo.InfoKind.Text, MediaInfo.InfoKind.Name);
-            if (val != null && !val.isEmpty()) {
-                getGeneralKeys().put(gKey, val);
-            }
-        }
-        for (Audio aKey : Audio.values()) {
-            String val = info.get(MediaInfo.StreamKind.Audio, 0, aKey.getKey(),  MediaInfo.InfoKind.Text, MediaInfo.InfoKind.Name);
-            if (val != null && !val.isEmpty()) {
-                getAudioKeys().put(aKey, val);
-            }
-        }
-        for (Video vKey : Video.values()) {
-            String val = info.get(MediaInfo.StreamKind.Video, 0, vKey.getKey(),  MediaInfo.InfoKind.Text, MediaInfo.InfoKind.Name);
-            if (val != null && !val.isEmpty()) {
-                getVideoKeys().put(vKey, val);
-            }
-        }
-        info.close();
-    }
-    
-    public MovieMetadata(String filePath) {
-        this.path = filePath;
-        parseFile();
-    }
-
     /**
      * Getter accessor for attribute 'path'.
      *
@@ -108,12 +76,48 @@ public class MovieMetadata {
         return generalKeys;
     }
     
+    /**
+     * Return a 'general' value if key exists.
+     * 
+     * @param key
+     *      target key
+     * @return
+     *      target key
+     */
     public Optional<String> get(General key) {
         return Optional.ofNullable(getGeneralKeys().get(key));
     }
+    
+    /**
+     * Return a 'audit' value if key exists.
+     * 
+     * @param key
+     *      target key
+     * @return
+     *      target key
+     */
+    
     public Optional<String> get(Audio key) {
         return Optional.ofNullable(getAudioKeys().get(key));
     }
+    
+    public Optional < Integer > getVideoWidth() {
+        return get(Video.WIDTH).map(Integer::parseInt);
+    }
+    
+    public Optional < Integer > getVideoHeight() {
+        return get(Video.HEIGHT).map(Integer::parseInt);
+    }
+    
+    /**
+     * Return a 'video' value if key exists.
+     * 
+     * @param key
+     *      target key
+     * @return
+     *      target key
+     */
+    
     public Optional<String> get(Video key) {
         return Optional.ofNullable(getVideoKeys().get(key));
     }
