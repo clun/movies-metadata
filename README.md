@@ -1,28 +1,27 @@
 # Movies Metadata Parser
 
-Proposition of wrapper for the MediaInfo DLL in order to parse metadata of movie files.
+Proposition of wrapper for the MediaInfo DLL in order to parse and retrieve metadatas movies.
 
-At the moment the tool only works for Windows.
+At the moment the tool only works for Windows (as base on a DLL)
 
 ## Prerequisites 
 
 In order for this tool to work you need to download and install a library named MediaInfo available at
 [https://mediaarea.net/fr/MediaInfo/Download/Source](https://mediaarea.net/fr/MediaInfo/Download/Source)
 
-The library is also provided in the library in `src/main/resources`. To install it in your maven repository :
+The library is also provided in this reposotiry in `src/main/resources`. 
 
+To install it in your maven repository you can use the following command:
 ```
 mvn install:install-file -Dfile=./movieader/src/main/resources/mediaInfo-1.0.dll -DgroupId=com.github.clun.movie -DartifactId=mediaInfo -Dversion=1.0 -Dpackaging=dll
 ```
 
-
-
 ## Usage
 
-Samples have been put in folder `src/test/resources` :
+Samples videos have been put in folder `src/test/resources` to illustrate. As a consequence, just run `mvn:test` on project to see samples outputs on MKV, MP4, OGG, FLV, WEBM and 3GP files.
 
-run `mvn:test` on project to see samples outputs on MKV, MP4, OGG, FLV, WEBM and 3GP files.
 
+### Sample code
 ```java
 
 // Parsing
@@ -41,7 +40,7 @@ video.get(Video.BITRATE_STRING);
 video.get(Audio.COMPRESSION_RATIO);
 ```
 
-Sample Output for a MP4 file
+### Sample Output for a MP4 file
 
 ```ini
 ====================small.mp4 ======================================
@@ -118,3 +117,12 @@ CODECID=avc1
 FORMAT_PROFILE=Baseline@L3
 ```
 
+## MIT License
+
+This repository is provided with The MIT License (MIT)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
